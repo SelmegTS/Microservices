@@ -1,6 +1,8 @@
 package com.itm.space.backendresources.api.response;
 
 import lombok.Data;
+import org.keycloak.representations.idm.GroupRepresentation;
+import org.keycloak.representations.idm.RoleRepresentation;
 
 import java.util.List;
 

@@ -22,6 +22,7 @@ public abstract class BaseIntegrationTest {
             .writer()
             .withDefaultPrettyPrinter();
 
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired
     protected MockMvc mvc;
 
