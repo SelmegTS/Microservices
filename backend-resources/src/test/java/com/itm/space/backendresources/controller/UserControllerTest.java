@@ -25,11 +25,12 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
