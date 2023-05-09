@@ -24,6 +24,7 @@ import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.test.web.servlet.MvcResult;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
