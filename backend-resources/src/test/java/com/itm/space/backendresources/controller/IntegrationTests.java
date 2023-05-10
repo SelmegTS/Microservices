@@ -4,10 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itm.space.backendresources.BaseIntegrationTest;
 import com.itm.space.backendresources.api.request.UserRequest;
 import com.itm.space.backendresources.exception.BackendResourcesException;
-import com.itm.space.backendresources.mapper.UserMapper;
-import com.itm.space.backendresources.mapper.UserMapperImpl;
-import com.itm.space.backendresources.service.UserService;
-import com.itm.space.backendresources.service.UserServiceImpl;
 import com.itm.space.backendresources.utils.JsonUtils;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
@@ -25,8 +21,11 @@ import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.core.MethodParameter;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import javax.ws.rs.core.Response;
 import java.net.URI;
@@ -35,7 +34,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -48,11 +46,11 @@ class IntegrationTests extends BaseIntegrationTest {
 
     @MockBean
     private Keycloak keycloak;
-    private UserMapper userMapper;
+    @SpyBean
+    private RestExceptionHandler restExceptionHandler;
     private UserRequest userRequest;
     private ObjectMapper objectMapper;
-    @MockBean
-    private RestExceptionHandler restExceptionHandler;
+
 
     @BeforeEach
     void setUp() {
@@ -60,7 +58,6 @@ class IntegrationTests extends BaseIntegrationTest {
         MockitoAnnotations.openMocks(this);
         when(keycloak.realm(any())).thenReturn(mock(RealmResource.class));
         when(keycloak.realm(any()).users()).thenReturn(mock(UsersResource.class));
-        userMapper = new UserMapperImpl();
         userRequest = new UserRequest("Selmeg",
                 "selmeg@mail.ru",
                 "selmeg",
@@ -96,12 +93,14 @@ class IntegrationTests extends BaseIntegrationTest {
     }
 
     @Test
-    @SneakyThrows
     void createUserFailingTest() {
-        Response response = Response.status(Response.Status.NOT_FOUND).build();
+        Response response = Response.status(Response.Status.BAD_REQUEST).build();
         when(keycloak.realm(any()).users().create(any())).thenReturn(response);
-        mvc.perform(requestWithContent(post("/api/users"), userRequest));
-
+        try {
+            mvc.perform(requestWithContent(post("/api/users"), userRequest));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         verify(restExceptionHandler, times(1)).handleException(any(BackendResourcesException.class));
     }
 
@@ -142,13 +141,12 @@ class IntegrationTests extends BaseIntegrationTest {
         UUID notValidId = UUID.randomUUID();
         when(keycloak.realm(any()).users().get(String.valueOf(notValidId)))
                 .thenThrow(new RuntimeException("User not found"));
-
         try {
             mvc.perform(get("/api/users/{id}", notValidId)).andReturn();
         } catch (Exception e) {
             e.printStackTrace();
         }
-
+        verify(restExceptionHandler, times(1)).handleException(any(BackendResourcesException.class));
     }
 
     private UserRepresentation makeUserRepresentation() {
